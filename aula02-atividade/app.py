@@ -13,7 +13,7 @@ def montar_tabela(livros):
             "Título": livro["titulo"],
             "Categoria": livro["categoria"],
             "Nota": livro["nota"] * "⭐",
-            "Preço": f"£ {livro["preco"]:.2f}",
+            "Preço": f"£ {livro['preco']:.2f}",
             "Faixa": classificar_preco(livro["preco"])
         }
         tabela.append(linha)
@@ -41,12 +41,34 @@ def contar_por_faixa(livros):
     return contagem
 
 
+def buscar_por_titulo(livros, busca):
+    """Devolve uma nova lista com os livros cujo título contém a busca."""
+    termo = busca.strip().lower()
+    if not termo:
+        return livros.copy()
+
+    encontrados = []
+    for livro in livros:
+        titulo = livro["titulo"].lower()
+        if termo in titulo:
+            encontrados.append(livro)
+
+    return encontrados
+
+
 def main():
     st.set_page_config(page_title="Dashboard de Livros", page_icon="📚", layout="wide")
     st.title("📚 Dashboard de Livros")
 
     livros = dados.carregar_livros()
-    tabela = montar_tabela(livros)
+    busca = st.text_input("Buscar livro por título", placeholder="Digite parte do título")
+    livros_encontrados = buscar_por_titulo(livros, busca)
+    tabela = montar_tabela(livros_encontrados)
+
+    st.write(f"{len(livros_encontrados)} livro(s) encontrado(s)")
+
+    if not livros_encontrados:
+        st.warning("Nenhum livro encontrado.")
 
     col1, col2, col3, col4 = st.columns(4)
     qtd_livros = len(livros)
@@ -59,7 +81,7 @@ def main():
     col3.metric("Qtd. livros 5 Estrelas", cinco_estrelas)
 
     mais_caro = dados.encontrar_mais_caro(livros)
-    col4.metric("Livro mais caro", f"£{mais_caro["preco"]}")
+    col4.metric("Livro mais caro", f"£{mais_caro['preco']}")
     col4.caption(mais_caro["titulo"])
 
     st.dataframe(tabela)
